@@ -1,88 +1,91 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mi Lista de YouTube</title>
+  <meta charset="UTF-8">
+  <title>Mi Lista de Música</title>
   <style>
-    body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
-    input, button { padding: 10px; margin: 5px; }
-    input { width: 300px; }
-    .video { margin: 10px 0; }
-    a { color: #1db954; text-decoration: none; }
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 2rem;
+    }
+    h1 {
+      color: #0ff;
+    }
+    input, button {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      width: 300px;
+    }
+    button {
+      background: #0ff;
+      color: #000;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 0.5rem 0;
+    }
+    a {
+      color: #0ff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
+  <h1>🎵 Mi Lista de Canciones</h1>
 
-  <h1>🎵 Mi Lista de Música YouTube</h1>
+  <input id="song-name" type="text" placeholder="Nombre de la canción">
+  <input id="song-link" type="text" placeholder="Enlace (YouTube, Spotify...)">
+  <button onclick="addSong()">Añadir canción</button>
 
-  <input id="title" type="text" placeholder="Título de la canción">
-  <input id="url" type="text" placeholder="URL de YouTube">
-  <button onclick="addSong()">Añadir</button>
-
-  <h2>Lista:</h2>
-  <div id="list"></div>
-
-  <button onclick="shareList()">Compartir Lista</button>
-  <p id="shareLink"></p>
+  <ul id="song-list"></ul>
 
   <script>
-    let songs = [];
+    const songList = document.getElementById('song-list');
 
-    function addSong() {
-      const title = document.getElementById('title').value;
-      const url = document.getElementById('url').value;
-      if (title && url.includes("youtube.com")) {
-        songs.push({ title, url });
-        updateList();
-        saveToLocal();
-      }
-    }
-
-    function updateList() {
-      const listDiv = document.getElementById('list');
-      listDiv.innerHTML = '';
+    function loadSongs() {
+      const songs = JSON.parse(localStorage.getItem('songs')) || [];
+      songList.innerHTML = '';
       songs.forEach((song, index) => {
-        listDiv.innerHTML += `<div class="video">
-          <strong>${song.title}</strong><br>
-          <a href="${song.url}" target="_blank">${song.url}</a>
-        </div>`;
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="${song.link}" target="_blank">${song.name}</a>
+                        <button onclick="deleteSong(${index})">❌</button>`;
+        songList.appendChild(li);
       });
     }
 
-    function saveToLocal() {
+    function addSong() {
+      const name = document.getElementById('song-name').value.trim();
+      const link = document.getElementById('song-link').value.trim();
+      if (name && link) {
+        const songs = JSON.parse(localStorage.getItem('songs')) || [];
+        songs.push({ name, link });
+        localStorage.setItem('songs', JSON.stringify(songs));
+        document.getElementById('song-name').value = '';
+        document.getElementById('song-link').value = '';
+        loadSongs();
+      } else {
+        alert("Por favor, escribe el nombre y el enlace.");
+      }
+    }
+
+    function deleteSong(index) {
+      const songs = JSON.parse(localStorage.getItem('songs')) || [];
+      songs.splice(index, 1);
       localStorage.setItem('songs', JSON.stringify(songs));
+      loadSongs();
     }
 
-    function loadFromLocal() {
-      const saved = localStorage.getItem('songs');
-      if (saved) {
-        songs = JSON.parse(saved);
-        updateList();
-      }
-    }
-
-    function shareList() {
-      const encoded = encodeURIComponent(JSON.stringify(songs));
-      const url = `${location.origin}${location.pathname}?data=${encoded}`;
-      document.getElementById('shareLink').innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
-    }
-
-    function loadFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('data')) {
-        try {
-          songs = JSON.parse(decodeURIComponent(params.get('data')));
-          updateList();
-        } catch (e) {
-          console.error("Error cargando lista desde URL");
-        }
-      }
-    }
-
-    // Inicializa
-    loadFromURL();
-    loadFromLocal();
+    loadSongs();
   </script>
 </body>
 </html>
