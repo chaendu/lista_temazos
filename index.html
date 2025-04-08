@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Lista de YouTube</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
+    input, button { padding: 10px; margin: 5px; }
+    input { width: 300px; }
+    .video { margin: 10px 0; }
+    a { color: #1db954; text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <h1>🎵 Mi Lista de Música YouTube</h1>
+
+  <input id="title" type="text" placeholder="Título de la canción">
+  <input id="url" type="text" placeholder="URL de YouTube">
+  <button onclick="addSong()">Añadir</button>
+
+  <h2>Lista:</h2>
+  <div id="list"></div>
+
+  <button onclick="shareList()">Compartir Lista</button>
+  <p id="shareLink"></p>
+
+  <script>
+    let songs = [];
+
+    function addSong() {
+      const title = document.getElementById('title').value;
+      const url = document.getElementById('url').value;
+      if (title && url.includes("youtube.com")) {
+        songs.push({ title, url });
+        updateList();
+        saveToLocal();
+      }
+    }
+
+    function updateList() {
+      const listDiv = document.getElementById('list');
+      listDiv.innerHTML = '';
+      songs.forEach((song, index) => {
+        listDiv.innerHTML += `<div class="video">
+          <strong>${song.title}</strong><br>
+          <a href="${song.url}" target="_blank">${song.url}</a>
+        </div>`;
+      });
+    }
+
+    function saveToLocal() {
+      localStorage.setItem('songs', JSON.stringify(songs));
+    }
+
+    function loadFromLocal() {
+      const saved = localStorage.getItem('songs');
+      if (saved) {
+        songs = JSON.parse(saved);
+        updateList();
+      }
+    }
+
+    function shareList() {
+      const encoded = encodeURIComponent(JSON.stringify(songs));
+      const url = `${location.origin}${location.pathname}?data=${encoded}`;
+      document.getElementById('shareLink').innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
+    }
+
+    function loadFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('data')) {
+        try {
+          songs = JSON.parse(decodeURIComponent(params.get('data')));
+          updateList();
+        } catch (e) {
+          console.error("Error cargando lista desde URL");
+        }
+      }
+    }
+
+    // Inicializa
+    loadFromURL();
+    loadFromLocal();
+  </script>
+</body>
+</html>
